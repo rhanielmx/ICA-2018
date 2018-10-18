@@ -7,9 +7,8 @@ mkdirs <- function(dir){
 }
 
 #Função que gera os histogramas a partir de um data.frame
-make_histograms <- function(data, main_path, sub_path){
+make_histograms <- function(data, file_path){
   hist_names=colnames(data)
-  file_path=file.path(main_path, sub_path)
   mkdirs(file_path)
   
   for(name in hist_names){
