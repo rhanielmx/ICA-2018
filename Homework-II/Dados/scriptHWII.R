@@ -35,5 +35,5 @@ dataTrans<-rbind(contPredTrain,contPredTest)
 correlacao<-cor(dataTrans)
 corrplot(correlacao,method="square",type="lower",order="FPC")
 
-#Gerando os Histogramas para cada preditor depois de remover a skewness
+#Gerando os Histogramas para cada preditor depois de remover a skewness.
 make_histograms(data=contPredTrain, file_path=file.path(figures_path, "after"))
