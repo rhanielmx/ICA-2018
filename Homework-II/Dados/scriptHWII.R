@@ -39,6 +39,43 @@ corrplot(correlation,method="square",type="lower",order="FPC")
 #Gerando os Histogramas para cada preditor depois de remover a skewness.
 make_histograms(data=contPredTrain, file_path=file.path(figures_path, "after"))
 
+#Step 1
+
+trainingData <- cbind(solTrainX[,!notFP], contPredTrain)
+trainingData$Solubility <- solTrainY
+
+lmFitAllPredictors <- lm(Solubility ~ ., data = trainingData)
+
+lmPred1 <- predict(lmFitAllPredictors, solTestXtrans)
+head(lmPred1)
+
+lmValues1 <- data.frame(obs = solTestY, pred = lmPred1)
+defaultSummary(lmValues1)
+
+plot(lmPred1)
+plot(lmValues1)
+
+#CV 5
+ctrl <- trainControl(method = "cv", number = 5)
+set.seed(100)
+lmFit1 <- train(x = solTrainXtrans, y = solTrainY,method = "lm", trControl = ctrl)
+lmFit1
+
+#CV 10
+ctrl <- trainControl(method = "cv", number = 10)
+set.seed(100)
+lmFit1 <- train(x = solTrainXtrans, y = solTrainY,method = "lm", trControl = ctrl)
+lmFit1
+
+plot(lmFit1)
+xyplot(solTrainY ~ predict(lmFit1),
+       ## plot the points (type = 'p') and a background grid ('g')
+       type = c("p", "g"),
+       xlab = "Predicted", ylab = "Observed")
+
+xyplot(resid(lmFit1) ~ predict(lmFit1),
+       type = c("p", "g"),
+       xlab = "Predicted", ylab = "Residuals")
 
 #Step 2
 
