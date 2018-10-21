@@ -39,7 +39,20 @@ corrplot(correlation,method="square",type="lower",order="FPC")
 #Gerando os Histogramas para cada preditor depois de remover a skewness.
 make_histograms(data=contPredTrain, file_path=file.path(figures_path, "after"))
 
+#Executando o PCA
+X <- contPredTrain
 
+scaledX <- scale(X)
+corr.mat <- cor(scaledX)
+cov.eig <- eigen(corr.mat)
+feature.vector1 <- as.matrix(cov.eig$vectors[,1],ncol=1)
+feature.vector2 <- as.matrix(cov.eig$vectors[,c(1,2)],ncol=2)
+final1 <- t(feature.vector1) %*% t(scaledX)
+final2<- t(feature.vector2) %*% t(scaledX)
+
+PCs = data.frame(-final2[1,],-final2[2,],Type)
+colnames(PCs)<-c("PC1", "PC2", "Type")
+ggplot(data = PCs, aes(x=PC1, y=PC2)) + geom_point(aes(col=Type))
 #Step 2
 
 library(elasticnet)
