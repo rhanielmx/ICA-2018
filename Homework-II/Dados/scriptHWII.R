@@ -27,7 +27,7 @@ contPredTrain<-solTrainX[,notFP]+1
 contPredTest<-solTestX[,notFP]+1
 
 #Gerando os Histogramas para cada preditor antes de remover a skewness
-make_histograms(data=contPredTrain, file_path=file.path(figures_path, "before"))
+make_histograms(data=contPredTrain, file_path=file.path(figures_path, "beforeBoxCox"))
 
 pp<-preProcess(contPredTrain,method="BoxCox")
 contPredTrain<-predict(pp,contPredTrain)
@@ -37,7 +37,7 @@ correlation<-cor(dataTrans)
 corrplot(correlation,method="square",type="lower",order="FPC")
 
 #Gerando os Histogramas para cada preditor depois de remover a skewness.
-make_histograms(data=contPredTrain, file_path=file.path(figures_path, "after"))
+make_histograms(data=contPredTrain, file_path=file.path(figures_path, "afterBoxCox"))
 
 #Executando o PCA
 X <- contPredTrain
@@ -53,6 +53,43 @@ final2<- t(feature.vector2) %*% t(scaledX)
 PCs = data.frame(-final2[1,],-final2[2,],Type)
 colnames(PCs)<-c("PC1", "PC2", "Type")
 ggplot(data = PCs, aes(x=PC1, y=PC2)) + geom_point(aes(col=Type))
+
+
+#Step 1
+
+trainingData <- cbind(solTrainX[,!notFP], contPredTrain)
+trainingData$Solubility <- solTrainY
+
+lmFitAllPredictors <- lm(Solubility ~ ., data = trainingData)
+
+lmPred1 <- predict(lmFitAllPredictors, solTestXtrans)
+head(lmPred1)
+
+lmValues1 <- data.frame(obs = solTestY, pred = lmPred1)
+defaultSummary(lmValues1)
+
+plot(lmValues1)
+
+#CV 5
+ctrl <- trainControl(method = "cv", number = 5)
+lmFit1 <- train(x = solTrainXtrans, y = solTrainY,method = "lm", trControl = ctrl)
+lmFit1
+
+#CV 10
+ctrl <- trainControl(method = "cv", number = 10)
+lmFit1 <- train(x = solTrainXtrans, y = solTrainY,method = "lm", trControl = ctrl)
+lmFit1
+
+xyplot(solTrainY ~ predict(lmFit1),
+       ## plot the points (type = 'p') and a background grid ('g')
+       type = c("p", "g"),
+       xlab = "Predicted", ylab = "Observed")
+
+xyplot(resid(lmFit1) ~ predict(lmFit1),
+       type = c("p", "g"),
+       xlab = "Predicted", ylab = "Residuals")
+
+
 #Step 2
 
 library(elasticnet)
@@ -74,3 +111,15 @@ ridgeValues <- data.frame(obs = solTestY, pred = newRidgePred)
 
 plot(ridgeRegFit$results$lambda, ridgeRegFit$results$RMSE, xlab = "Penalty", ylab = "RMSE (Cross Validation)")
 lines(ridgeRegFit$results$lambda, ridgeRegFit$results$RMSE)
+
+
+#Step 3
+ctrl <- trainControl(method = "cv", number = 10)
+plsTune <- train(trainingSet , solTrainY ,method = "pls",tuneLength = 20,trControl = ctrl)
+plsTune
+
+plot(plsTune)
+
+plsPred <- predict(plsTune , testSet , ncomp = 12)
+PLSdf <- data.frame(pred = plsPred , obs = solTestY)
+defaultSummary(PLSdf)
